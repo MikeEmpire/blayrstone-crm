@@ -1,5 +1,7 @@
 // lib/api.ts - API client for Django backend
 
+import { GetAppointmentResponse } from "@/types/clients";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
@@ -126,7 +128,9 @@ class ApiClient {
   }
 
   // Appointment methods
-  async getAppointments(params?: Record<string, string>) {
+  async getAppointments(
+    params?: Record<string, string>
+  ): Promise<GetAppointmentResponse> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/appointments/${queryString}`);
   }
