@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import apiClient from "@/lib/api";
 import { Client } from "@/types";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClientTable } from "@/components/clients/ClientTable";
@@ -33,6 +34,9 @@ export default function ClientsPage() {
       setClients(response.results || response);
     } catch (error) {
       console.error("Failed to fetch clients:", error);
+      toast.error(
+        "Failed to fetch clients, please try again or reach out to Mike"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -44,9 +48,10 @@ export default function ClientsPage() {
     try {
       await apiClient.deleteClient(id);
       setClients(clients.filter((c) => c.id !== id));
+      toast.success(`${name} has been deleted successfully`);
     } catch (error) {
       console.error("Failed to delete client:", error);
-      alert("Failed to delete client");
+      toast.error("Failed to delete client, please try again");
     }
   };
 

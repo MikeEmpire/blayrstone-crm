@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface ClientEditDialogProps {
   open: boolean;
@@ -56,9 +57,11 @@ export function ClientEditDialog({
 
     try {
       await apiClient.updateClient(client.id, formData);
+      toast.success("Client updated successfully");
       onSuccess();
     } catch (err: any) {
       setError(err.message || "Failed to update client");
+      toast.error("Failed to update client, please try again");
     } finally {
       setIsSubmitting(false);
     }
