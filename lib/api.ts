@@ -44,6 +44,13 @@ class ApiClient {
       throw new Error(error.detail || "Request failed");
     }
 
+    if (
+      response.status === 204 ||
+      response.headers.get("content-length") === "0"
+    ) {
+      return {} as T;
+    }
+
     return response.json();
   }
 
