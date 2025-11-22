@@ -54,12 +54,12 @@ export function WorkerEditDialog({
     setIsSubmitting(true);
 
     try {
-      await apiClient.updateClient(worker.id, formData);
-      toast.success("Client updated successfully");
+      await apiClient.updateWorker(worker.id, formData);
+      toast.success("Worker updated successfully");
       onSuccess();
     } catch (err: any) {
-      setError(err.message || "Failed to update client");
-      toast.error("Failed to update client, please try again");
+      setError(err.message || "Failed to update worker");
+      toast.error("Failed to update worker, please try again");
     } finally {
       setIsSubmitting(false);
     }
@@ -69,8 +69,8 @@ export function WorkerEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Client</DialogTitle>
-          <DialogDescription>Update client information</DialogDescription>
+          <DialogTitle>Edit Worker</DialogTitle>
+          <DialogDescription>Update worker information</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -148,7 +148,7 @@ export function WorkerEditDialog({
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="potential">Potential</SelectItem>
+                <SelectItem value="on_leave">On Leave</SelectItem>
               </SelectContent>
             </Select>
           </div>
