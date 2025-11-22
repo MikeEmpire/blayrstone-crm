@@ -1,6 +1,7 @@
 // lib/api.ts - API client for Django backend
 
 import { GetAppointmentResponse } from "@/types/clients";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "./constants";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
@@ -11,10 +12,48 @@ interface RequestOptions extends RequestInit {
 
 class ApiClient {
   private baseURL: string;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+
+    if (typeof window !== "undefined") {
+      this.accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+      this.refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    }
   }
+
+  private async refreshAccessToken(): Promise<boolean> {
+    if (!this.refreshToken) return false;
+
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: this.refreshToken }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      this.accessToken = data.access;
+      localStorage.setItem(ACCESS_TOKEN_KEY, data.access);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Logout method
+  logout() {
+    this.accessToken = null;
+    this.refreshToken = null;
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+
+  // Login method
 
   private async request<T>(
     endpoint: string,
@@ -22,7 +61,16 @@ class ApiClient {
   ): Promise<T> {
     const { token, ...fetchOptions } = options;
 
-    const headers = new Headers(fetchOptions.headers);
+    const headers = new Headers(
+      Object.assign(
+        { "Content-Type": "application/json" },
+        options.headers || {}
+      )
+    );
+
+    if (this.accessToken) {
+      headers.set("Authorization", `Bearer ${this.accessToken}`);
+    }
 
     if (!headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
@@ -32,10 +80,21 @@ class ApiClient {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    let response = await fetch(`${this.baseURL}${endpoint}`, {
       ...fetchOptions,
       headers,
     });
+
+    if (response.status === 401 && this.refreshToken) {
+      const refreshed = await this.refreshAccessToken();
+      if (refreshed) {
+        headers.set("Authorization", `Bearer ${this.accessToken}`);
+        response = await fetch(`${this.baseURL}${endpoint}`, {
+          ...fetchOptions,
+          headers,
+        });
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({
@@ -54,12 +113,27 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth methods (for future JWT implementation)
+  // Login method
   async login(username: string, password: string) {
-    return this.request("/auth/login/", {
+    const response = await fetch(`${this.baseURL}/auth/login/`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
+
+    if (!response.ok) {
+      throw new Error("Login failed");
+    }
+
+    const data = await response.json();
+    this.accessToken = data.access;
+    this.refreshToken = data.refresh;
+
+    // Store tokens
+    localStorage.setItem(ACCESS_TOKEN_KEY, data.access);
+    localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh);
+
+    return data;
   }
 
   // Client methods

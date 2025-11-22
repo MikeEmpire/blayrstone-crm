@@ -4,6 +4,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import apiClient from "@/lib/api";
+import { ACCESS_TOKEN_KEY } from "@/lib/constants";
 
 interface User {
   id: number;
@@ -30,32 +32,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on mount
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (token) {
+      setUser({ id: 1, username: "admin", email: "" });
     }
     setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string) => {
     try {
-      // For now, we'll use a simple mock login
-      // TODO: Replace with actual API call when Django JWT is setup
+      const response = await apiClient.login(username, password);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      setUser({
+        id: response.user?.id || 1,
+        username: response.user?.username || username,
+        email: response.user?.email || "",
+      });
 
-      // Mock successful login
-      const mockUser: User = {
-        id: 1,
-        username,
-        email: `${username}@blayrstone.com`,
-        first_name: "Admin",
-        last_name: "User",
-      };
-
-      setUser(mockUser);
-      localStorage.setItem("user", JSON.stringify(mockUser));
       router.push("/dashboard");
     } catch (error) {
       throw new Error("Login failed");
@@ -63,8 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    apiClient.logout();
     setUser(null);
-    localStorage.removeItem("user");
     router.push("/login");
   };
 

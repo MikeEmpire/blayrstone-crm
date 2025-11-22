@@ -3,6 +3,7 @@
 import { useState } from "react";
 import apiClient from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -67,6 +68,7 @@ export function ClientCreateDialog({
       });
     } catch (err: any) {
       setError(err.message || "Failed to create client");
+      toast.error("Failed to create client, please try again");
     } finally {
       setIsSubmitting(false);
     }
