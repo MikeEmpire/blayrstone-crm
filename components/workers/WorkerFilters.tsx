@@ -10,19 +10,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface ClientFiltersProps {
+interface WorkerFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   statusFilter: string;
   onStatusChange: (value: string) => void;
 }
 
-export function ClientFilters({
+export function WorkerFilters({
   searchTerm,
   onSearchChange,
   statusFilter,
   onStatusChange,
-}: ClientFiltersProps) {
+}: WorkerFiltersProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -39,13 +39,13 @@ export function ClientFilters({
         <Label htmlFor="status">Status</Label>
         <Select value={statusFilter} onValueChange={onStatusChange}>
           <SelectTrigger id="status">
-            <SelectValue placeholder="All Clients" />
+            <SelectValue placeholder="All Workers" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Clients</SelectItem>
+            <SelectItem value="all">All Workers</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="on_leave">On Leave</SelectItem>
+            <SelectItem value="potential">Potential</SelectItem>
           </SelectContent>
         </Select>
       </div>
