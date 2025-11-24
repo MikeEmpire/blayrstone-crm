@@ -1,5 +1,7 @@
 // types/index.ts - Main type definitions for the CRM
 
+import { AppointmentStatusValues, AppointmentTypeValues } from "./appointments";
+
 export type Client = {
   id: number;
   first_name: string;
@@ -32,14 +34,14 @@ export type ServiceWorker = {
   updated_at: string;
 };
 
-export type Appointment = {
+export interface Appointment {
   id: number;
   client: number;
   client_name: string;
   service_worker?: number;
   worker_name?: string;
-  appointment_type: "service" | "consultation" | "follow_up" | "emergency";
-  status: "scheduled" | "in_progress" | "completed" | "cancelled" | "no_show";
+  appointment_type: AppointmentTypeValues;
+  status: AppointmentStatusValues;
   scheduled_date: string;
   scheduled_time: string;
   duration_minutes: number;
@@ -51,7 +53,7 @@ export type Appointment = {
   is_upcoming: boolean;
   created_at: string;
   updated_at: string;
-};
+}
 
 export type AppointmentStats = {
   total: number;

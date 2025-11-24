@@ -1,7 +1,9 @@
 // lib/api.ts - API client for Django backend
 
-import { GetAppointmentResponse } from "@/types/clients";
+import { GetAppointmentResponse, GetClientResponse } from "@/types/clients";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "./constants";
+import { GetWorkerResponse } from "@/types/workers";
+import { Appointment } from "@/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
@@ -137,7 +139,9 @@ class ApiClient {
   }
 
   // Client methods
-  async getClients(params?: Record<string, string>) {
+  async getClients(
+    params?: Record<string, string>
+  ): Promise<GetClientResponse> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/clients/${queryString}`);
   }
@@ -171,7 +175,9 @@ class ApiClient {
   }
 
   // Worker methods
-  async getWorkers(params?: Record<string, string>) {
+  async getWorkers(
+    params?: Record<string, string>
+  ): Promise<GetWorkerResponse> {
     const queryString = params ? `?${new URLSearchParams(params)}` : "";
     return this.request(`/workers/${queryString}`);
   }
@@ -216,7 +222,7 @@ class ApiClient {
     return this.request(`/appointments/${queryString}`);
   }
 
-  async getAppointment(id: number) {
+  async getAppointment(id: number): Promise<Appointment> {
     return this.request(`/appointments/${id}/`);
   }
 
