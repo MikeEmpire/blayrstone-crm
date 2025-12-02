@@ -1,9 +1,10 @@
 // lib/api.ts - API client for Django backend
 
-import { GetAppointmentResponse, GetClientResponse } from "@/types/clients";
+import { GetClientResponse } from "@/types/clients";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "./constants";
 import { GetWorkerResponse } from "@/types/workers";
 import { Appointment } from "@/types";
+import { GetAppointmentResponse } from "@/types/appointments";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
