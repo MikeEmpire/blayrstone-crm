@@ -19,7 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CanAccess } from "@/context/CanAccess";
+import { Users } from "lucide-react";
 
 interface AppointmentTableProps {
   appointments: Appointment[];
@@ -32,24 +39,6 @@ export function AppointmentTable({
   onDelete,
   onStatusChange,
 }: AppointmentTableProps) {
-  // const getStatusBadge = (status: string) => {
-  //   const variants: Record<
-  //     string,
-  //     "default" | "secondary" | "outline" | "destructive"
-  //   > = {
-  //     scheduled: "default",
-  //     in_progress: "outline",
-  //     completed: "secondary",
-  //     cancelled: "destructive",
-  //     no_show: "destructive",
-  //   };
-  //   return (
-  //     <Badge variant={variants[status] || "default"}>
-  //       {status.replace("_", " ")}
-  //     </Badge>
-  //   );
-  // };
-
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       service: "Service",
@@ -58,6 +47,57 @@ export function AppointmentTable({
       emergency: "Emergency",
     };
     return labels[type] || type;
+  };
+
+  const renderWorkers = (appointment: Appointment) => {
+    const workers = appointment.service_workers_details || [];
+
+    if (workers.length === 0) {
+      return <span className="text-muted-foreground text-sm">Unassigned</span>;
+    }
+
+    // Show first worker
+    const firstWorker = workers[0];
+    const remainingCount = workers.length - 1;
+
+    return (
+      <div className="flex items-center gap-1.5">
+        <Link
+          href={`/workers/${firstWorker.id}`}
+          className="text-blue-600 hover:underline text-sm"
+        >
+          {firstWorker.full_name}
+        </Link>
+
+        {remainingCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="secondary"
+                  className="cursor-help text-xs px-1.5 py-0"
+                >
+                  +{remainingCount}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="space-y-1">
+                  {workers.slice(1).map((worker) => (
+                    <div key={worker.id} className="text-sm">
+                      {worker.full_name}
+                    </div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {workers.length > 1 && (
+          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+        )}
+      </div>
+    );
   };
 
   if (appointments.length === 0) {
@@ -74,7 +114,7 @@ export function AppointmentTable({
         <TableRow>
           <TableHead>Date & Time</TableHead>
           <TableHead>Client</TableHead>
-          <TableHead>Worker</TableHead>
+          <TableHead>Workers</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Duration</TableHead>
@@ -98,18 +138,7 @@ export function AppointmentTable({
                 {appointment.client_name}
               </Link>
             </TableCell>
-            <TableCell>
-              {appointment.service_worker ? (
-                <Link
-                  href={`/workers/${appointment.service_worker}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  {appointment.worker_name}
-                </Link>
-              ) : (
-                <span className="text-muted-foreground">Unassigned</span>
-              )}
-            </TableCell>
+            <TableCell>{renderWorkers(appointment)}</TableCell>
             <TableCell>
               <Badge variant="outline">
                 {getTypeLabel(appointment.appointment_type)}
@@ -142,18 +171,18 @@ export function AppointmentTable({
                 <Button variant="ghost" size="sm" asChild>
                   <Link href={`/appointments/${appointment.id}`}>View</Link>
                 </Button>
+                <CanAccess permission="admin">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      onDelete(appointment.id, appointment.client_name)
+                    }
+                  >
+                    Delete
+                  </Button>
+                </CanAccess>
               </div>
-              <CanAccess permission="admin">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    onDelete(appointment.id, appointment.client_name)
-                  }
-                >
-                  Delete
-                </Button>
-              </CanAccess>
             </TableCell>
           </TableRow>
         ))}
