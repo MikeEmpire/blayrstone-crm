@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { WorkerTable } from "@/components/workers/WorkersTable";
 import { WorkerFilters } from "@/components/workers/WorkerFilters";
 import { WorkerCreateDialog } from "@/components/workers/WorkerCreateDialog";
+import { CanAccess } from "@/context/CanAccess";
 
 export default function WorkersPage() {
   const [workers, setWorkers] = useState<ServiceWorker[]>([]);
@@ -75,10 +76,12 @@ export default function WorkersPage() {
             Manage your service worker database
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <span className="mr-2">+</span>
-          Add Service Worker
-        </Button>
+        <CanAccess permission="admin">
+          <Button onClick={() => setShowCreateModal(true)}>
+            <span className="mr-2">+</span>
+            Add Service Worker
+          </Button>
+        </CanAccess>
       </div>
 
       {/* Filters */}

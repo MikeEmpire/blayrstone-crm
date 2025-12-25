@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppointmentTable } from "@/components/appointments/AppointmentTable";
 import { AppointmentFilters } from "@/components/appointments/AppointmentFilters";
 import { AppointmentCreateDialog } from "@/components/appointments/AppointmentCreateDialog";
+import { CanAccess } from "@/context/CanAccess";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -112,10 +113,12 @@ export default function AppointmentsPage() {
             Manage service appointments and schedules
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <span className="mr-2">+</span>
-          Schedule Appointment
-        </Button>
+        <CanAccess permission="admin">
+          <Button onClick={() => setShowCreateModal(true)}>
+            <span className="mr-2">+</span>
+            Schedule Appointment
+          </Button>
+        </CanAccess>
       </div>
 
       {/* Quick Stats */}

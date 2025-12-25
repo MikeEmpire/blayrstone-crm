@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CanAccess } from "@/context/CanAccess";
 
 interface AppointmentTableProps {
   appointments: Appointment[];
@@ -31,23 +32,23 @@ export function AppointmentTable({
   onDelete,
   onStatusChange,
 }: AppointmentTableProps) {
-  const getStatusBadge = (status: string) => {
-    const variants: Record<
-      string,
-      "default" | "secondary" | "outline" | "destructive"
-    > = {
-      scheduled: "default",
-      in_progress: "outline",
-      completed: "secondary",
-      cancelled: "destructive",
-      no_show: "destructive",
-    };
-    return (
-      <Badge variant={variants[status] || "default"}>
-        {status.replace("_", " ")}
-      </Badge>
-    );
-  };
+  // const getStatusBadge = (status: string) => {
+  //   const variants: Record<
+  //     string,
+  //     "default" | "secondary" | "outline" | "destructive"
+  //   > = {
+  //     scheduled: "default",
+  //     in_progress: "outline",
+  //     completed: "secondary",
+  //     cancelled: "destructive",
+  //     no_show: "destructive",
+  //   };
+  //   return (
+  //     <Badge variant={variants[status] || "default"}>
+  //       {status.replace("_", " ")}
+  //     </Badge>
+  //   );
+  // };
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -141,6 +142,8 @@ export function AppointmentTable({
                 <Button variant="ghost" size="sm" asChild>
                   <Link href={`/appointments/${appointment.id}`}>View</Link>
                 </Button>
+              </div>
+              <CanAccess permission="admin">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -150,7 +153,7 @@ export function AppointmentTable({
                 >
                   Delete
                 </Button>
-              </div>
+              </CanAccess>
             </TableCell>
           </TableRow>
         ))}

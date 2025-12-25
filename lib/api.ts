@@ -139,6 +139,23 @@ class ApiClient {
     return data;
   }
 
+  async fetchUserProfile(token: string) {
+    const response = await fetch(`${this.baseURL}/auth/me/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.ok) {
+      const userData = await response.json();
+      return userData;
+    }
+    return {
+      error: "Failed to fetch user profile",
+    };
+  }
+
   // Client methods
   async getClients(
     params?: Record<string, string>

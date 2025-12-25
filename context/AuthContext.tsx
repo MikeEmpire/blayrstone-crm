@@ -13,6 +13,9 @@ interface User {
   email: string;
   first_name?: string;
   last_name?: string;
+  is_superuser?: boolean;
+  is_staff?: boolean;
+  groups: string[];
 }
 
 interface AuthContextType {
@@ -21,6 +24,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  isAdmin: () => boolean;
+  isStaffViewer: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,24 +35,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const isAdmin = () => {
+    return user?.is_superuser || false;
+  };
+
+  const isStaffViewer = () => user?.groups?.includes("Staff Viewer") || false;
+
+  const fetchUserProfile = async (token: string) => {
+    const userProfile = await apiClient.fetchUserProfile(token);
+    if (userProfile.error) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+    setUser(userProfile);
+  };
+
   useEffect(() => {
     // Check if user is logged in on mount
     const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     if (token) {
-      setUser({ id: 1, username: "admin", email: "" });
+      fetchUserProfile(token).finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string) => {
     try {
       const response = await apiClient.login(username, password);
 
-      setUser({
-        id: response.user?.id || 1,
-        username: response.user?.username || username,
-        email: response.user?.email || "",
-      });
+      if (response.error) {
+        throw new Error("Login failed");
+      }
+
+      localStorage.setItem(ACCESS_TOKEN_KEY, response.access);
+      fetchUserProfile(response.access);
 
       router.push("/dashboard");
     } catch (error) {
@@ -65,6 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        isAdmin,
+        isStaffViewer,
         isLoading,
         isAuthenticated: !!user,
         login,

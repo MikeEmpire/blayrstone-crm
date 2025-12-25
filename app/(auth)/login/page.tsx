@@ -1,7 +1,4 @@
 "use client";
-
-// app/(auth)/login/page.tsx - Login page
-
 import { useState, FormEvent } from "react";
 import { useAuth } from "@/context/AuthContext";
 

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { CanAccess } from "@/context/CanAccess";
 
 interface ClientTableProps {
   clients: Client[];
@@ -68,13 +69,15 @@ export function ClientTable({ clients, onDelete }: ClientTableProps) {
                 <Button variant="ghost" size="sm" asChild>
                   <Link href={`/clients/${client.id}`}>View</Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(client.id, client.full_name)}
-                >
-                  Delete
-                </Button>
+                <CanAccess permission="admin">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(client.id, client.full_name)}
+                  >
+                    Delete
+                  </Button>
+                </CanAccess>
               </div>
             </TableCell>
           </TableRow>

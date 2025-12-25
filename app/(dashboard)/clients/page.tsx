@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ClientTable } from "@/components/clients/ClientTable";
 import { ClientFilters } from "@/components/clients/ClientFilters";
 import { ClientCreateDialog } from "@/components/clients/ClientCreateDialog";
+import { CanAccess } from "@/context/CanAccess";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -75,10 +76,12 @@ export default function ClientsPage() {
             Manage your client database
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <span className="mr-2">+</span>
-          Add Client
-        </Button>
+        <CanAccess permission="admin">
+          <Button onClick={() => setShowCreateModal(true)}>
+            <span className="mr-2">+</span>
+            Add Client
+          </Button>
+        </CanAccess>
       </div>
 
       {/* Filters */}
