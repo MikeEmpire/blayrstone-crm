@@ -41,6 +41,7 @@ export interface Appointment {
   service_worker?: number;
   service_workers: number[]
   service_workers_details?: ServiceWorker[];
+  worker_count?: number;
   worker_name?: string;
   appointment_type: AppointmentTypeValues;
   status: AppointmentStatusValues;

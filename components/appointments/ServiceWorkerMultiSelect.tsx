@@ -49,6 +49,7 @@ export function ServiceWorkerMultiSelect({
   };
 
   const removeWorker = (workerId: number, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onChange(selectedWorkerIds.filter((id) => id !== workerId));
   };
@@ -62,6 +63,7 @@ export function ServiceWorkerMultiSelect({
           aria-expanded={open}
           className="w-full justify-between min-h-10 h-auto"
           disabled={disabled}
+          type="button"
         >
           <div className="flex gap-1 flex-wrap flex-1">
             {selectedWorkers.length === 0 ? (
@@ -70,13 +72,14 @@ export function ServiceWorkerMultiSelect({
               selectedWorkers.map((worker) => (
                 <Badge key={worker.id} variant="secondary" className="gap-1">
                   {worker.full_name}
-                  <button
-                    type="button"
+                  <span
                     onClick={(e) => removeWorker(worker.id, e)}
-                    className="ml-1 rounded-full hover:bg-muted"
+                    className="ml-1 rounded-full hover:bg-muted cursor-pointer"
+                    role="button"
+                    aria-label={`Remove ${worker.full_name}`}
                   >
                     <X className="h-3 w-3" />
-                  </button>
+                  </span>
                 </Badge>
               ))
             )}

@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentEditDialog } from "@/components/appointments/AppointmentEditDialog";
 import InfoField from "@/components/shared/InfoField";
+import { Users } from "lucide-react";
+import { CanAccess } from "@/context/CanAccess";
 
 export default function AppointmentDetailPage() {
   const params = useParams();
@@ -168,9 +170,11 @@ export default function AppointmentDetailPage() {
           <Button variant="outline" onClick={() => setIsEditing(true)}>
             Edit
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
-            Delete
-          </Button>
+          <CanAccess permission="admin">
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </CanAccess>
         </div>
       </div>
 
@@ -192,7 +196,7 @@ export default function AppointmentDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Client & Worker */}
+      {/* Client & Workers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Client Information */}
         <Card>
@@ -209,22 +213,49 @@ export default function AppointmentDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Worker Information */}
+        {/* Service Workers Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Service Worker</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Service Workers
+              {(appointment.worker_count ?? 0) > 1 && (
+                <Badge variant="secondary" className="text-xs">
+                  <Users className="h-3 w-3 mr-1" />
+                  {appointment.worker_count}
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <InfoField
-              label="Assigned Worker"
-              value={appointment.worker_name || "Unassigned"}
-            />
-            {appointment.service_worker && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/workers/${appointment.service_worker}`}>
-                  View Worker Details →
-                </Link>
-              </Button>
+            {appointment.service_workers_details &&
+            appointment.service_workers_details.length > 0 ? (
+              <div className="space-y-3">
+                {appointment.service_workers_details.map((worker, index) => (
+                  <div
+                    key={worker.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                  >
+                    <div className="space-y-1">
+                      <div className="font-medium">{worker.full_name}</div>
+                      {worker.skills && (
+                        <div className="text-sm text-muted-foreground">
+                          {worker.skills}
+                        </div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        {worker.email} • {worker.phone}
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/workers/${worker.id}`}>View →</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground py-4 text-center border rounded-lg">
+                No workers assigned
+              </div>
             )}
           </CardContent>
         </Card>

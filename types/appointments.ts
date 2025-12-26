@@ -50,6 +50,7 @@ export const initialAppointmentFormData: AppointmentFormData = {
   client: -1,
   service_workers: [],
   appointment_type: "service",
+  worker_count: 0,
   status: "scheduled",
   scheduled_date: "",
   scheduled_time: "",
