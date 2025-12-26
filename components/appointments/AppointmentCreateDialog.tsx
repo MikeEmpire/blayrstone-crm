@@ -4,10 +4,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import apiClient from "@/lib/api";
-import {
-  Client,
-  ServiceWorker,
-} from "@/types";
+import { Client, ServiceWorker } from "@/types";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +32,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { AppointmentFormData, initialAppointmentFormData } from "@/types/appointments";
+import {
+  AppointmentFormData,
+  initialAppointmentFormData,
+} from "@/types/appointments";
+import { ServiceWorkerMultiSelect } from "./ServiceWorkerMultiSelect";
+import { CanAccess } from "@/context/CanAccess";
 
 interface AppointmentCreateDialogProps {
   open: boolean;
@@ -53,9 +55,9 @@ export function AppointmentCreateDialog({
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<number[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>(
-   initialAppointmentFormData 
+    initialAppointmentFormData
   );
 
   // Load clients and workers when dialog opens
@@ -63,6 +65,7 @@ export function AppointmentCreateDialog({
     if (open) {
       loadClientsAndWorkers();
       // Reset form when opening
+      setSelectedWorkerIds([]);
       setFormData(initialAppointmentFormData);
       setSelectedDate(undefined);
     }
@@ -118,6 +121,11 @@ export function AppointmentCreateDialog({
       return;
     }
 
+    if (!selectedWorkerIds || selectedWorkerIds.length === 0) {
+      toast.error("Please select at least one service worker");
+      return;
+    }
+
     if (!formData.scheduled_date || !formData.scheduled_time) {
       toast.error("Please select date and time");
       return;
@@ -129,6 +137,7 @@ export function AppointmentCreateDialog({
       // Prepare data for API
       const submitData: any = {
         client: formData.client,
+        service_workers: selectedWorkerIds,
         appointment_type: formData.appointment_type,
         status: formData.status,
         scheduled_date: formData.scheduled_date,
@@ -139,20 +148,24 @@ export function AppointmentCreateDialog({
         notes: formData.notes,
       };
 
-      // Only include service_worker if one is selected
-      if (formData.service_worker && formData.service_worker !== -1) {
-        submitData.service_worker = formData.service_worker;
-      }
-
       await apiClient.createAppointment(submitData);
+
+      toast.success("Appointment created successfully");
 
       // Reset form
       setFormData(initialAppointmentFormData);
       setSelectedDate(undefined);
+      setSelectedWorkerIds([]);
 
       onSuccess();
+      onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || "Failed to create appointment");
+      // Handle validation errors from backend
+      if (err.service_workers && Array.isArray(err.service_workers)) {
+        toast.error(err.service_workers[0]);
+      } else {
+        toast.error(err.message || "Failed to create appointment");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -199,34 +212,31 @@ export function AppointmentCreateDialog({
 
           {/* Service Worker Selection */}
           <div className="space-y-2">
-            <Label htmlFor="worker">Service Worker</Label>
+            <Label htmlFor="worker">Service Workers *</Label>
             {isLoadingData ? (
               <div className="text-sm text-muted-foreground">
                 Loading workers...
               </div>
             ) : (
-              <Select
-                value={formData.service_worker?.toString() || "unassigned"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    service_worker:
-                      value === "unassigned" ? undefined : parseInt(value),
-                  })
-                }
-              >
-                <SelectTrigger id="worker">
-                  <SelectValue placeholder="Select a worker (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {workers.map((worker) => (
-                    <SelectItem key={worker.id} value={worker.id.toString()}>
-                      {worker.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <ServiceWorkerMultiSelect
+                  workers={workers}
+                  selectedWorkerIds={selectedWorkerIds}
+                  onChange={setSelectedWorkerIds}
+                  placeholder="Select one or more workers"
+                />
+                {selectedWorkerIds.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    At least one worker is required
+                  </p>
+                )}
+                {selectedWorkerIds.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedWorkerIds.length} worker
+                    {selectedWorkerIds.length > 1 ? "s" : ""} selected
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -253,7 +263,7 @@ export function AppointmentCreateDialog({
                     mode="single"
                     selected={selectedDate}
                     onSelect={handleDateSelect}
-                    initialFocus
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -367,9 +377,11 @@ export function AppointmentCreateDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Appointment"}
-            </Button>
+            <CanAccess permission="admin">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create Appointment"}
+              </Button>
+            </CanAccess>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -32,6 +32,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ServiceWorkerMultiSelect } from "@/components/appointments/ServiceWorkerMultiSelect";
 import { AppointmentFormData } from "@/types/appointments";
 
 interface AppointmentEditDialogProps {
@@ -55,7 +56,7 @@ export function AppointmentEditDialog({
 
   const [formData, setFormData] = useState<AppointmentFormData>({
     client: appointment.client,
-    service_worker: appointment.service_worker,
+    service_workers: appointment.service_workers || [],
     appointment_type: appointment.appointment_type,
     status: appointment.status,
     scheduled_date: appointment.scheduled_date,
@@ -74,7 +75,7 @@ export function AppointmentEditDialog({
       // Set form data from appointment
       setFormData({
         client: appointment.client,
-        service_worker: appointment.service_worker,
+        service_workers: appointment.service_workers || [],
         appointment_type: appointment.appointment_type,
         status: appointment.status,
         scheduled_date: appointment.scheduled_date,
@@ -136,6 +137,11 @@ export function AppointmentEditDialog({
       return;
     }
 
+    if (formData.service_workers.length === 0) {
+      toast.error("Please select at least one service worker");
+      return;
+    }
+
     if (!formData.scheduled_date || !formData.scheduled_time) {
       toast.error("Please select date and time");
       return;
@@ -144,31 +150,18 @@ export function AppointmentEditDialog({
     setIsSubmitting(true);
 
     try {
-      // Prepare data for API
-      const submitData: any = {
-        client: formData.client,
-        appointment_type: formData.appointment_type,
-        status: formData.status,
-        scheduled_date: formData.scheduled_date,
-        scheduled_time: formData.scheduled_time,
-        duration_minutes: formData.duration_minutes,
-        location: formData.location,
-        description: formData.description,
-        notes: formData.notes,
-      };
+      await apiClient.updateAppointment(appointment.id, formData);
 
-      // Handle service_worker (can be null/undefined)
-      if (formData.service_worker && formData.service_worker !== -1) {
-        submitData.service_worker = formData.service_worker;
-      } else {
-        submitData.service_worker = null;
-      }
-
-      await apiClient.updateAppointment(appointment.id, submitData);
-
+      toast.success("Appointment updated successfully");
       onSuccess();
+      onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || "Failed to update appointment");
+      // Handle validation errors from backend
+      if (err.service_workers && Array.isArray(err.service_workers)) {
+        toast.error(err.service_workers[0]);
+      } else {
+        toast.error(err.message || "Failed to update appointment");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -211,36 +204,35 @@ export function AppointmentEditDialog({
             )}
           </div>
 
-          {/* Service Worker Selection */}
+          {/* Service Workers Multi-Select */}
           <div className="space-y-2">
-            <Label htmlFor="edit_worker">Service Worker</Label>
+            <Label>Service Workers *</Label>
             {isLoadingData ? (
               <div className="text-sm text-muted-foreground">
                 Loading workers...
               </div>
             ) : (
-              <Select
-                value={formData.service_worker?.toString() || "unassigned"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    service_worker:
-                      value === "unassigned" ? undefined : parseInt(value),
-                  })
-                }
-              >
-                <SelectTrigger id="edit_worker">
-                  <SelectValue placeholder="Select a worker (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {workers.map((worker) => (
-                    <SelectItem key={worker.id} value={worker.id.toString()}>
-                      {worker.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <>
+                <ServiceWorkerMultiSelect
+                  workers={workers}
+                  selectedWorkerIds={formData.service_workers}
+                  onChange={(ids) =>
+                    setFormData({ ...formData, service_workers: ids })
+                  }
+                  placeholder="Select one or more workers"
+                />
+                {formData.service_workers.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    At least one worker is required
+                  </p>
+                )}
+                {formData.service_workers.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {formData.service_workers.length} worker
+                    {formData.service_workers.length > 1 ? "s" : ""} selected
+                  </p>
+                )}
+              </>
             )}
           </div>
 

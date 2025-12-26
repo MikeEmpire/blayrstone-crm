@@ -39,7 +39,7 @@ export interface Appointment {
   client: number;
   client_name: string;
   service_worker?: number;
-  service_workers?: number[]
+  service_workers: number[]
   service_workers_details?: ServiceWorker[];
   worker_name?: string;
   appointment_type: AppointmentTypeValues;

@@ -48,7 +48,7 @@ export interface AppointmentFormData
 
 export const initialAppointmentFormData: AppointmentFormData = {
   client: -1,
-  service_worker: undefined,
+  service_workers: [],
   appointment_type: "service",
   status: "scheduled",
   scheduled_date: "",
