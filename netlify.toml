@@ -1,10 +1,7 @@
 # netlify.toml
-
 [build]
   command = "npm run build"
-  publish = "out"
+  publish = ".next"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
