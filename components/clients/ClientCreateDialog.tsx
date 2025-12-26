@@ -52,8 +52,13 @@ export function ClientCreateDialog({
     setError("");
     setIsSubmitting(true);
 
+    const formattedPhone = formData.phone.replace(/[\s\-()]/g, "");
+
     try {
-      await apiClient.createClient(formData);
+      await apiClient.createClient({
+        ...formData,
+        phone: formattedPhone,
+      });
       onSuccess();
       // Reset form
       setFormData({
